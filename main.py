@@ -4,6 +4,7 @@ from database.operations import (
     add_customer,
     find_customer_by_name,
     get_customer_orders,
+    get_customer_billing
 )
 from models.customer import Customer
 from models.laundry_order import LaundryOrder
@@ -50,8 +51,14 @@ def main():
         except ValueError as error:
             print(f"Invalid input: {error}")
 
-    print(f"\nCustomer: {customer.name}")
-    print(f"Total bill for new orders: KSh {customer.total_bill():.2f}")
+    order_count, total_weight = get_customer_billing(customer.customer_id)
+    total_bill = total_weight * LaundryOrder.PRICE_PER_KG
+
+    print(f"\n--- Customer Billing Summary ---")
+    print(f"Customer: {customer.name}")
+    print(f"Total orders: {order_count}")
+    print(f"Total laundry: {total_weight:g} kg")
+    print(f"Total bill: KSh {total_bill:.2f}")
 
 
 if __name__ == "__main__":

@@ -64,3 +64,15 @@ def get_customer_orders(customer_id, db_name=None):
             WHERE customer_id = ?
             ORDER BY id
         """, (customer_id,)).fetchall()
+
+
+def get_customer_billing(customer_id, db_name=None):
+    with get_connection(db_name) as connection:
+        return connection.execute("""
+            SELECT
+                COUNT(id),
+                COALESCE(SUM(weight), 0)
+            FROM orders
+            WHERE customer_id = ?
+        """, (customer_id,)).fetchone()
+

@@ -10,6 +10,7 @@ from database.operations import (
     find_customer_by_name,
     get_customer,
     get_customer_orders,
+    get_customer_billing
 )
 
 
@@ -70,6 +71,14 @@ class TestDatabase(unittest.TestCase):
                 with self.assertRaises(sqlite3.IntegrityError):
                     add_order(customer_id, weight, self.db_name)
 
+    def test_customer_billing(self):
+        customer_id = add_customer("Billing Test", self.db_name)
+        add_order(customer_id, 2, self.db_name)
+        add_order(customer_id, 3, self.db_name)
+
+        billing = get_customer_billing(customer_id, self.db_name)
+
+        self.assertEqual(billing, (2, 5.0))
 
 
 if __name__ == "__main__":
