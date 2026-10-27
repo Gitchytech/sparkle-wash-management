@@ -10,7 +10,10 @@ from database.operations import (
     find_customer_by_name,
     get_customer,
     get_customer_orders,
-    get_customer_billing
+    get_customer_billing,
+    record_payment,
+    get_customer_payment_summary,
+    get_customer_balance
 )
 
 
@@ -80,6 +83,81 @@ class TestDatabase(unittest.TestCase):
 
         self.assertEqual(billing, (2, 5.0))
 
+    def test_record_payment(self):
+        customer_id = add_customer("Payment Test", self.db_name)
+
+        payment_id = record_payment(customer_id, 500, self.db_name)
+
+        self.assertIsInstance(payment_id, int)
+
+        with get_connection(self.db_name) as connection:
+            payment = connection.execute(
+                "SELECT customer_id, amount FROM payments WHERE id = ?",
+                (payment_id,),
+            ).fetchone()
+
+        self.assertEqual(payment, (customer_id, 500.0))
+
+    def test_reject_nonpositive_payment(self):
+        customer_id = add_customer("Invalid Payment", self.db_name)
+
+        for amount in (0, -100):
+            with self.subTest(amount=amount):
+                with self.assertRaises(ValueError):
+                    record_payment(customer_id, amount, self.db_name)
+
+    def test_customer_payment_summary(self):
+        customer_id = add_customer("Payment Summary Test", self.db_name)
+
+        record_payment(customer_id, 500, self.db_name)
+        record_payment(customer_id, 300, self.db_name)
+
+        total_paid = get_customer_payment_summary(
+            customer_id, self.db_name
+        )
+
+        self.assertEqual(total_paid, 800.0)
+
+    def test_customer_with_no_payments(self):
+        customer_id = add_customer("Unpaid Customer", self.db_name)
+
+        total_paid = get_customer_payment_summary(
+            customer_id, self.db_name
+        )
+
+        self.assertEqual(total_paid, 0)
+
+    def test_unpaid_customer_balance(self):
+        customer_id = add_customer("Unpaid Test", self.db_name)
+        add_order(customer_id, 2, self.db_name)
+
+        summary = get_customer_balance(customer_id, self.db_name)
+
+        self.assertEqual(summary["total_billed"], 300)
+        self.assertEqual(summary["total_paid"], 0)
+        self.assertEqual(summary["balance"], 300)
+
+    def test_partially_paid_customer_balance(self):
+        customer_id = add_customer("Partial Test", self.db_name)
+        add_order(customer_id, 2, self.db_name)
+        record_payment(customer_id, 100, self.db_name)
+
+        summary = get_customer_balance(customer_id, self.db_name)
+
+        self.assertEqual(summary["total_billed"], 300)
+        self.assertEqual(summary["total_paid"], 100)
+        self.assertEqual(summary["balance"], 200)
+
+    def test_fully_paid_customer_balance(self):
+        customer_id = add_customer("Paid Test", self.db_name)
+        add_order(customer_id, 2, self.db_name)
+        record_payment(customer_id, 300, self.db_name)
+
+        summary = get_customer_balance(customer_id, self.db_name)
+
+        self.assertEqual(summary["total_billed"], 300)
+        self.assertEqual(summary["total_paid"], 300)
+        self.assertEqual(summary["balance"], 0)
 
 if __name__ == "__main__":
     unittest.main()

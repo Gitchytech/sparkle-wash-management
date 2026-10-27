@@ -1,12 +1,13 @@
 
 from database.db import create_tables
+from models.customer import Customer
 from database.operations import (
     add_customer,
     find_customer_by_name,
     get_customer_orders,
-    get_customer_billing
+    get_customer_balance,
+    record_payment
 )
-from models.customer import Customer
 from models.laundry_order import LaundryOrder
 
 
@@ -51,15 +52,41 @@ def main():
         except ValueError as error:
             print(f"Invalid input: {error}")
 
-    order_count, total_weight = get_customer_billing(customer.customer_id)
-    total_bill = total_weight * LaundryOrder.PRICE_PER_KG
+    while True:
+        summary = get_customer_balance(customer.customer_id)
 
-    print(f"\n--- Customer Billing Summary ---")
-    print(f"Customer: {customer.name}")
-    print(f"Total orders: {order_count}")
-    print(f"Total laundry: {total_weight:g} kg")
-    print(f"Total bill: KSh {total_bill:.2f}")
+        print("\n--- Customer Billing Summary ---")
+        print(f"Customer: {customer.name}")
+        print(f"Total orders: {summary['order_count']}")
+        print(f"Total laundry: {summary['total_weight']:g} kg")
+        print(f"Total billed: KSh {summary['total_billed']:.2f}")
+        print(f"Total paid: KSh {summary['total_paid']:.2f}")
+        print(f"Outstanding balance: KSh {summary['balance']:.2f}")
 
+        if summary["balance"] <= 0:
+            break
+
+        choice = input("Record a payment? (y/n): ").strip().lower()
+
+        if choice != "y":
+            break
+
+        try:
+            amount = float(input("Enter payment amount (KSh): "))
+
+            if amount <= 0:
+                print("Payment must be greater than zero.")
+                continue
+
+            if amount > summary["balance"]:
+                print("Payment cannot exceed the outstanding balance.")
+                continue
+
+            record_payment(customer.customer_id, amount)
+            print("Payment recorded successfully.")
+
+        except ValueError:
+            print("Please enter a valid number.")
 
 if __name__ == "__main__":
     main()

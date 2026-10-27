@@ -33,3 +33,12 @@ def create_tables(db_name=None):
             )
         """)
 
+        connection.execute("""
+            CREATE TABLE IF NOT EXISTS payments (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                customer_id INTEGER NOT NULL,
+                amount REAL NOT NULL CHECK (amount > 0),
+                payment_date TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (customer_id) REFERENCES customers(id)
+            )
+        """)
