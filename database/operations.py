@@ -132,6 +132,19 @@ def get_customer_payment_summary(customer_id, db_name=None):
         """, (customer_id,)).fetchone()[0]
 
 
+def get_customer_payment_history(customer_id, db_name=None):
+    with get_connection(db_name) as connection:
+        return connection.execute(
+            """
+            SELECT id, amount, payment_date
+            FROM payments
+            WHERE customer_id = ?
+            ORDER BY payment_date ASC, id ASC
+            """,
+            (customer_id,),
+        ).fetchall()
+
+
 def get_customer_balance(customer_id, db_name=None):
     order_count, total_weight = get_customer_billing(
         customer_id, db_name

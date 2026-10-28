@@ -6,7 +6,8 @@ from database.operations import (
     find_customer_by_name,
     get_customer_orders,
     get_customer_report,
-    record_payment
+    get_customer_payment_history,
+    record_payment,
 )
 from models.laundry_order import LaundryOrder
 
@@ -98,6 +99,19 @@ def main():
 
         except ValueError:
             print("Please enter a valid number.")
+
+    history = get_customer_payment_history(customer.customer_id)
+
+    print("\n--- Payment History ---")
+
+    if history:
+        for payment_id, amount, payment_date in history:
+            print(
+                f"Payment {payment_id}: KSh {amount:.2f} "
+                f"- Date: {payment_date}"
+            )
+    else:
+        print("No payments recorded yet.")
 
 if __name__ == "__main__":
     main()

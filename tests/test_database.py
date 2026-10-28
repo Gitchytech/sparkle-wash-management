@@ -14,7 +14,8 @@ from database.operations import (
     record_payment,
     get_customer_payment_summary,
     get_customer_balance,
-    get_customer_report
+    get_customer_report,
+    get_customer_payment_history
 )
 
 
@@ -120,6 +121,39 @@ class TestDatabase(unittest.TestCase):
         )
 
         self.assertEqual(total_paid, 800.0)
+
+
+    def test_customer_payment_history(self):
+        customer_id = add_customer("Payment History Test", self.db_name)
+        add_order(customer_id, 5, self.db_name)
+
+        first_id = record_payment(customer_id, 300, self.db_name)
+        second_id = record_payment(customer_id, 200, self.db_name)
+
+        history = get_customer_payment_history(
+            customer_id, self.db_name
+        )
+
+        self.assertEqual(len(history), 2)
+        self.assertEqual(
+            [payment[0] for payment in history],
+            [first_id, second_id],
+        )
+        self.assertEqual(
+            [payment[1] for payment in history],
+            [300.0, 200.0],
+        )
+        self.assertTrue(all(payment[2] for payment in history))
+
+    def test_customer_with_no_payment_history(self):
+        customer_id = add_customer("No Payments Test", self.db_name)
+
+        history = get_customer_payment_history(
+            customer_id, self.db_name
+        )
+
+        self.assertEqual(history, [])
+
 
     def test_customer_with_no_payments(self):
         customer_id = add_customer("Unpaid Customer", self.db_name)
