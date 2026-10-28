@@ -149,3 +149,19 @@ def get_customer_balance(customer_id, db_name=None):
         "total_paid": total_paid,
         "balance": total_billed - total_paid,
     }
+
+def get_customer_report(customer_id, db_name=None):
+    customer = get_customer(customer_id, db_name)
+
+    if customer is None:
+        return None
+
+    orders = get_customer_orders(customer_id, db_name)
+    balance = get_customer_balance(customer_id, db_name)
+
+    return {
+        "customer_id": customer[0],
+        "name": customer[1],
+        "orders": orders,
+        **balance,
+    }

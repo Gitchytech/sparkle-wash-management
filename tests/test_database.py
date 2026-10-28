@@ -13,7 +13,8 @@ from database.operations import (
     get_customer_billing,
     record_payment,
     get_customer_payment_summary,
-    get_customer_balance
+    get_customer_balance,
+    get_customer_report
 )
 
 
@@ -171,6 +172,28 @@ class TestDatabase(unittest.TestCase):
     def test_reject_payment_for_nonexistent_customer(self):
         with self.assertRaises(ValueError):
             record_payment(999999, 100, self.db_name)
+
+    def test_customer_report(self):
+        customer_id = add_customer("Jane", self.db_name)
+        add_order(customer_id, 2, self.db_name)
+        add_order(customer_id, 3, self.db_name)
+        record_payment(customer_id, 500, self.db_name)
+
+        report = get_customer_report(customer_id, self.db_name)
+
+        self.assertEqual(report["name"], "Jane")
+        self.assertEqual(report["order_count"], 2)
+        self.assertEqual(report["total_weight"], 5.0)
+        self.assertEqual(report["total_billed"], 750.0)
+        self.assertEqual(report["total_paid"], 500.0)
+        self.assertEqual(report["balance"], 250.0)
+        self.assertEqual(len(report["orders"]), 2)
+
+    def test_customer_report_missing_customer(self):
+        report = get_customer_report(99999, self.db_name)
+
+        self.assertIsNone(report)
+
 
 if __name__ == "__main__":
     unittest.main()

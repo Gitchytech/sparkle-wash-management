@@ -5,7 +5,7 @@ from database.operations import (
     add_customer,
     find_customer_by_name,
     get_customer_orders,
-    get_customer_balance,
+    get_customer_report,
     record_payment
 )
 from models.laundry_order import LaundryOrder
@@ -53,10 +53,21 @@ def main():
             print(f"Invalid input: {error}")
 
     while True:
-        summary = get_customer_balance(customer.customer_id)
+        report = get_customer_report(customer.customer_id)
+        summary = report
 
         print("\n--- Customer Billing Summary ---")
         print(f"Customer: {customer.name}")
+
+        print("\n--- Order Details ---")
+
+        for order_id, weight in report["orders"]:
+            price = weight * LaundryOrder.PRICE_PER_KG
+            print(
+                f"Order {order_id}: {weight:g} kg - "
+                f"KSh {price:.2f}"
+            )
+
         print(f"Total orders: {summary['order_count']}")
         print(f"Total laundry: {summary['total_weight']:g} kg")
         print(f"Total billed: KSh {summary['total_billed']:.2f}")
