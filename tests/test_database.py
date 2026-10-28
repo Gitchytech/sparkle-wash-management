@@ -85,6 +85,7 @@ class TestDatabase(unittest.TestCase):
 
     def test_record_payment(self):
         customer_id = add_customer("Payment Test", self.db_name)
+        add_order(customer_id, 5, self.db_name)
 
         payment_id = record_payment(customer_id, 500, self.db_name)
 
@@ -108,6 +109,7 @@ class TestDatabase(unittest.TestCase):
 
     def test_customer_payment_summary(self):
         customer_id = add_customer("Payment Summary Test", self.db_name)
+        add_order(customer_id, 6, self.db_name)
 
         record_payment(customer_id, 500, self.db_name)
         record_payment(customer_id, 300, self.db_name)
@@ -158,6 +160,17 @@ class TestDatabase(unittest.TestCase):
         self.assertEqual(summary["total_billed"], 300)
         self.assertEqual(summary["total_paid"], 300)
         self.assertEqual(summary["balance"], 0)
+
+    def test_reject_overpayment(self):
+        customer_id = add_customer("Overpayment Test", self.db_name)
+        add_order(customer_id, 2, self.db_name)  # KSh 300 bill
+
+        with self.assertRaises(ValueError):
+            record_payment(customer_id, 301, self.db_name)
+
+    def test_reject_payment_for_nonexistent_customer(self):
+        with self.assertRaises(ValueError):
+            record_payment(999999, 100, self.db_name)
 
 if __name__ == "__main__":
     unittest.main()

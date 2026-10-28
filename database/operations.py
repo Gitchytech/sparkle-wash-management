@@ -1,5 +1,6 @@
 
 from database.db import get_connection
+from models.laundry_order import LaundryOrder
 
 
 def add_customer(name, db_name=None):
@@ -76,12 +77,40 @@ def get_customer_billing(customer_id, db_name=None):
             WHERE customer_id = ?
         """, (customer_id,)).fetchone()
 
-
 def record_payment(customer_id, amount, db_name=None):
     if amount <= 0:
         raise ValueError("Payment amount must be greater than zero.")
 
     with get_connection(db_name) as connection:
+        customer = connection.execute(
+            "SELECT id FROM customers WHERE id = ?",
+            (customer_id,),
+        ).fetchone()
+
+        if customer is None:
+            raise ValueError("Customer does not exist.")
+
+        total_weight = connection.execute(
+            "SELECT COALESCE(SUM(weight), 0) FROM orders "
+            "WHERE customer_id = ?",
+            (customer_id,),
+        ).fetchone()[0]
+
+        total_paid = connection.execute(
+            "SELECT COALESCE(SUM(amount), 0) FROM payments "
+            "WHERE customer_id = ?",
+            (customer_id,),
+        ).fetchone()[0]
+
+        balance = (
+            total_weight * LaundryOrder.PRICE_PER_KG - total_paid
+        )
+
+        if amount > balance:
+            raise ValueError(
+                "Payment cannot exceed the outstanding balance."
+            )
+
         cursor = connection.execute(
             """
             INSERT INTO payments (customer_id, amount)
@@ -89,7 +118,9 @@ def record_payment(customer_id, amount, db_name=None):
             """,
             (customer_id, amount),
         )
+
         return cursor.lastrowid
+
 
 def get_customer_payment_summary(customer_id, db_name=None):
     with get_connection(db_name) as connection:
@@ -105,7 +136,7 @@ def get_customer_balance(customer_id, db_name=None):
     order_count, total_weight = get_customer_billing(
         customer_id, db_name
     )
-    total_billed = total_weight * 150
+    total_billed = total_weight * LaundryOrder.PRICE_PER_KG
 
     total_paid = get_customer_payment_summary(
         customer_id, db_name
