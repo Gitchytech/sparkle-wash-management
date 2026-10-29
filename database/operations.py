@@ -14,8 +14,14 @@ def add_customer(name, db_name=None):
         )
         return cursor.lastrowid
 
-
 def add_order(customer_id, weight, db_name=None):
+    if (
+        not isinstance(customer_id, int)
+        or isinstance(customer_id, bool)
+        or customer_id <= 0
+    ):
+        raise ValueError("Customer ID must be a positive integer.")
+
     if (
         not isinstance(weight, (int, float))
         or isinstance(weight, bool)

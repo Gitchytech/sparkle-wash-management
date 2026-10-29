@@ -74,6 +74,14 @@ class TestDatabase(unittest.TestCase):
         with self.assertRaises(sqlite3.IntegrityError):
             add_order(99999, 2, self.db_name)
 
+    def test_order_rejects_invalid_customer_id_types(self):
+        invalid_ids = (None, "abc", True, 1.5)
+
+        for customer_id in invalid_ids:
+            with self.subTest(customer_id=customer_id):
+                with self.assertRaises(ValueError):
+                    add_order(customer_id, 2, self.db_name)
+
     def test_order_rejects_nonpositive_weight(self):
         customer_id = add_customer("Constraint Test", self.db_name)
 
