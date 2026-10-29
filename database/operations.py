@@ -206,3 +206,26 @@ def get_customer_report(customer_id, db_name=None):
         "orders": orders,
         **balance,
     }
+
+def get_dashboard_summary(db_name=None):
+    """Return aggregate statistics for the laundry dashboard."""
+    with get_connection(db_name) as connection:
+        customers = connection.execute(
+            "SELECT COUNT(*) FROM customers"
+        ).fetchone()[0]
+
+        orders, total_weight = connection.execute("""
+            SELECT COUNT(*), COALESCE(SUM(weight), 0)
+            FROM orders
+        """).fetchone()
+
+        total_payments = connection.execute(
+            "SELECT COALESCE(SUM(amount), 0) FROM payments"
+        ).fetchone()[0]
+
+    return {
+        "total_customers": customers,
+        "total_orders": orders,
+        "total_weight": total_weight,
+        "total_payments": total_payments,
+    }

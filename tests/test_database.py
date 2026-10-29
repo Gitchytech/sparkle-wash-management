@@ -15,7 +15,8 @@ from database.operations import (
     get_customer_payment_summary,
     get_customer_balance,
     get_customer_report,
-    get_customer_payment_history
+    get_customer_payment_history,
+    get_dashboard_summary
 )
 
 
@@ -280,6 +281,26 @@ class TestDatabase(unittest.TestCase):
 
         self.assertIsNone(report)
 
+    def test_dashboard_summary_with_data(self):
+        customer_id = add_customer("Dashboard Test", self.db_name)
+        add_order(customer_id, 2, self.db_name)
+        add_order(customer_id, 3, self.db_name)
+        record_payment(customer_id, 100, self.db_name)
+
+        summary = get_dashboard_summary(self.db_name)
+
+        self.assertEqual(summary["total_customers"], 1)
+        self.assertEqual(summary["total_orders"], 2)
+        self.assertEqual(summary["total_weight"], 5.0)
+        self.assertEqual(summary["total_payments"], 100.0)
+
+    def test_dashboard_summary_when_empty(self):
+        summary = get_dashboard_summary(self.db_name)
+
+        self.assertEqual(summary["total_customers"], 0)
+        self.assertEqual(summary["total_orders"], 0)
+        self.assertEqual(summary["total_weight"], 0)
+        self.assertEqual(summary["total_payments"], 0)
 
 if __name__ == "__main__":
     unittest.main()

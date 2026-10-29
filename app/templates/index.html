@@ -18,6 +18,31 @@
             <p>Laundry management made simple.</p>
             <p>We care for your clothes so you can focus on what matters.</p>
         </section>
+        <section class="dashboard">
+            <h2>Business Overview</h2>
+
+            <div class="dashboard-grid">
+                <article class="dashboard-card">
+                    <h3>Total Customers</h3>
+                    <p>{{ summary.total_customers }}</p>
+                </article>
+
+                <article class="dashboard-card">
+                    <h3>Total Orders</h3>
+                    <p>{{ summary.total_orders }}</p>
+                </article>
+
+                <article class="dashboard-card">
+                    <h3>Laundry Processed</h3>
+                    <p>{{ "%.2f"|format(summary.total_weight) }} kg</p>
+                </article>
+
+                <article class="dashboard-card">
+                    <h3>Total Payments</h3>
+                    <p>KSh {{ "%.2f"|format(summary.total_payments) }}</p>
+                </article>
+            </div>
+        </section>
     </main>
 
     <footer>
