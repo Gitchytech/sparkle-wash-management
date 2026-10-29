@@ -32,6 +32,17 @@ class TestFlaskDashboard(unittest.TestCase):
         response = self.client.get("/")
         self.assertEqual(response.status_code, 200)
 
+    def test_customers_page_status(self):
+        response = self.client.get("/customers")
+        self.assertEqual(response.status_code, 200)
+
+    def test_customers_page_displays_customer(self):
+        response = self.client.get("/customers")
+        html = response.get_data(as_text=True)
+
+        self.assertIn("Dashboard Test", html)
+        self.assertIn("Customer Management", html)
+
     def test_dashboard_displays_summary(self):
         response = self.client.get("/")
         html = response.get_data(as_text=True)
@@ -56,6 +67,32 @@ class TestFlaskDashboard(unittest.TestCase):
             )
         finally:
             response.close()
+
+    def test_register_customer(self):
+        response = self.client.post(
+            "/customers",
+            data={"name": "New Test Customer"},
+        )
+
+        self.assertEqual(response.status_code, 302)
+
+        response = self.client.get("/customers")
+        self.assertIn(
+            "New Test Customer",
+            response.get_data(as_text=True),
+        )
+
+    def test_register_customer_with_blank_name(self):
+        response = self.client.post(
+            "/customers",
+            data={"name": "   "},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(
+            "Customer name cannot be empty.",
+            response.get_data(as_text=True),
+        )
 
 if __name__ == "__main__":
     unittest.main()
