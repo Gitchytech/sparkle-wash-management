@@ -132,6 +132,27 @@ class TestDatabase(unittest.TestCase):
                 with self.assertRaises(ValueError):
                     record_payment(customer_id, amount, self.db_name)
 
+    def test_reject_invalid_payment_types_and_values(self):
+        customer_id = add_customer(
+            "Invalid Payment Types", self.db_name
+        )
+
+        invalid_amounts = (
+            None,
+            "100",
+            True,
+            float("nan"),
+            float("inf"),
+            float("-inf"),
+        )
+
+        for amount in invalid_amounts:
+            with self.subTest(amount=amount):
+                with self.assertRaises(ValueError):
+                    record_payment(
+                        customer_id, amount, self.db_name
+                    )
+
     def test_customer_payment_summary(self):
         customer_id = add_customer("Payment Summary Test", self.db_name)
         add_order(customer_id, 6, self.db_name)

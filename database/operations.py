@@ -90,7 +90,17 @@ def get_customer_billing(customer_id, db_name=None):
             WHERE customer_id = ?
         """, (customer_id,)).fetchone()
 
+
 def record_payment(customer_id, amount, db_name=None):
+    if (
+        not isinstance(amount, (int, float))
+        or isinstance(amount, bool)
+    ):
+        raise ValueError("Payment amount must be a number.")
+
+    if not math.isfinite(amount):
+        raise ValueError("Payment amount must be a finite number.")
+
     if amount <= 0:
         raise ValueError("Payment amount must be greater than zero.")
 
@@ -133,7 +143,6 @@ def record_payment(customer_id, amount, db_name=None):
         )
 
         return cursor.lastrowid
-
 
 def get_customer_payment_summary(customer_id, db_name=None):
     with get_connection(db_name) as connection:
