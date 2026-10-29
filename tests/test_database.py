@@ -37,10 +37,17 @@ class TestDatabase(unittest.TestCase):
         self.assertEqual(len(orders), 1)
         self.assertEqual(orders[0], (order_id, 4.0))
 
+    def test_add_customer_rejects_invalid_names(self):
+        invalid_names = ("", "   ", None, 123, True)
+
+        for name in invalid_names:
+            with self.subTest(name=name):
+                with self.assertRaises(ValueError):
+                    add_customer(name, self.db_name)
+
     def test_get_customer(self):
         customer_id = add_customer("Jane", self.db_name)
 
-       
         customer = get_customer(customer_id, self.db_name)
 
         self.assertEqual(customer, (customer_id, "Jane"))
@@ -48,7 +55,6 @@ class TestDatabase(unittest.TestCase):
     def test_find_customer_case_insensitive(self):
         add_customer("Test Customer", self.db_name)
 
-       
         customer = find_customer_by_name("test customer", self.db_name)
 
         self.assertIsNotNone(customer)
