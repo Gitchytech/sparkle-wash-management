@@ -1,8 +1,8 @@
-
 import sqlite3
 from contextlib import contextmanager
+from pathlib import Path
 
-DB_NAME = "sparkle_wash.db"
+DB_NAME = Path(__file__).resolve().parent.parent / "sparkle_wash.db"
 
 
 @contextmanager
