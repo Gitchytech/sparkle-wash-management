@@ -69,12 +69,37 @@ def get_customer(customer_id, db_name=None):
             (customer_id,)
         ).fetchone()
 
+
+def update_customer(customer_id, name, db_name=None):
+    if (
+        not isinstance(customer_id, int)
+        or isinstance(customer_id, bool)
+        or customer_id <= 0
+    ):
+        raise ValueError("Customer ID must be a positive integer.")
+
+    if not isinstance(name, str) or not name.strip():
+        raise ValueError("Customer name cannot be empty.")
+
+    with get_connection(db_name) as connection:
+        cursor = connection.execute(
+            "UPDATE customers SET name = ? WHERE id = ?",
+            (name.strip(), customer_id),
+        )
+
+        if cursor.rowcount == 0:
+            return False
+
+        return True
+
+
 def find_customer_by_name(name, db_name=None):
     with get_connection(db_name) as connection:
         return connection.execute(
             "SELECT id, name FROM customers WHERE name = ? COLLATE NOCASE",
             (name.strip(),)
         ).fetchone()
+
 
 def get_customer_orders(customer_id, db_name=None):
     with get_connection(db_name) as connection:

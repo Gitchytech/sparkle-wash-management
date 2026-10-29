@@ -16,7 +16,8 @@ from database.operations import (
     get_customer_balance,
     get_customer_report,
     get_customer_payment_history,
-    get_dashboard_summary
+    get_dashboard_summary,
+    update_customer
 )
 
 
@@ -301,6 +302,59 @@ class TestDatabase(unittest.TestCase):
         self.assertEqual(summary["total_orders"], 0)
         self.assertEqual(summary["total_weight"], 0)
         self.assertEqual(summary["total_payments"], 0)
+
+
+    def test_update_customer(self):
+        customer_id = add_customer("Original Name", self.db_name)
+
+        result = update_customer(
+            customer_id,
+            "Updated Name",
+            self.db_name,
+        )
+
+        self.assertTrue(result)
+        self.assertEqual(
+            get_customer(customer_id, self.db_name),
+            (customer_id, "Updated Name"),
+        )
+
+
+    def test_update_customer_missing_customer(self):
+        result = update_customer(
+            99999,
+            "Updated Name",
+            self.db_name,
+        )
+
+        self.assertFalse(result)
+
+    def test_update_customer_rejects_invalid_ids(self):
+        customer_id = add_customer("Test Customer", self.db_name)
+
+        for invalid_id in [0, -1, "abc", None, True, 1.5]:
+            with self.subTest(customer_id=invalid_id):
+                with self.assertRaises(ValueError):
+                    update_customer(invalid_id, "New Name", self.db_name)
+
+        self.assertEqual(
+            get_customer(customer_id, self.db_name),
+            (customer_id, "Test Customer"),
+        )
+
+
+    def test_update_customer_rejects_invalid_names(self):
+        customer_id = add_customer("Test Customer", self.db_name)
+
+        for invalid_name in ["", "   ", None, 123, True]:
+            with self.subTest(name=invalid_name):
+                with self.assertRaises(ValueError):
+                    update_customer(customer_id, invalid_name, self.db_name)
+
+        self.assertEqual(
+            get_customer(customer_id, self.db_name),
+            (customer_id, "Test Customer"),
+        )
 
 if __name__ == "__main__":
     unittest.main()

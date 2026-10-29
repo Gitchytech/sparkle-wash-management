@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Customer - Sparkle Wash</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <main class="container">
+        <h1>Edit Customer</h1>
+
+        {% if error %}
+            <p role="alert">{{ error }}</p>
+        {% endif %}
+
+        <form method="POST">
+            <label for="name">Customer name</label>
+            <input
+                type="text"
+                id="name"
+                name="name"
+                value="{{ customer[1] }}"
+                maxlength="100"
+                required
+            >
+
+            <button type="submit">Save Changes</button>
+        </form>
+
+        <p>
+            <a href="{{ url_for('main.customers') }}">Back to Customers</a>
+        </p>
+    </main>
+</body>
+</html>

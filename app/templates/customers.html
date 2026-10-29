@@ -38,6 +38,7 @@
                         <tr>
                             <th>ID</th>
                             <th>Customer Name</th>
+                            <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -45,6 +46,9 @@
                             <tr>
                                 <td>{{ customer[0] }}</td>
                                 <td>{{ customer[1] }}</td>
+                                <td>
+                                    <a href="{{ url_for('main.edit_customer', customer_id=customer[0]) }}"> Edit</a>
+                                </td>
                             </tr>
                         {% endfor %}
                     </tbody>

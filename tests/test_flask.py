@@ -94,5 +94,63 @@ class TestFlaskDashboard(unittest.TestCase):
             response.get_data(as_text=True),
         )
 
+    def test_edit_customer_page_displays_current_name(self):
+        customer_id = add_customer("Edit Test Customer", self.db_name)
+
+        response = self.client.get(
+            f"/customers/{customer_id}/edit"
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(
+            'value="Edit Test Customer"',
+            response.get_data(as_text=True),
+        )
+
+    def test_edit_customer_updates_name(self):
+        customer_id = add_customer("Original Name", self.db_name)
+
+        response = self.client.post(
+            f"/customers/{customer_id}/edit",
+            data={"name": "Updated Name"},
+        )
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.headers["Location"], "/customers")
+
+        response = self.client.get("/customers")
+        self.assertIn(
+            "Updated Name",
+            response.get_data(as_text=True),
+        )
+        self.assertNotIn(
+            "Original Name",
+            response.get_data(as_text=True),
+        )
+
+    def test_edit_customer_rejects_blank_name(self):
+        customer_id = add_customer("Original Name", self.db_name)
+
+        response = self.client.post(
+            f"/customers/{customer_id}/edit",
+            data={"name": "   "},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(
+            "Customer name cannot be empty.",
+            response.get_data(as_text=True),
+        )
+        self.assertIn(
+            'value="Original Name"',
+            response.get_data(as_text=True),
+        )
+
+    def test_edit_nonexistent_customer_returns_404(self):
+        response = self.client.get("/customers/99999/edit")
+
+        self.assertEqual(response.status_code, 404)
+
+
 if __name__ == "__main__":
     unittest.main()
