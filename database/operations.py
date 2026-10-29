@@ -1,4 +1,4 @@
-
+import math
 from database.db import get_connection
 from models.laundry_order import LaundryOrder
 
@@ -16,13 +16,24 @@ def add_customer(name, db_name=None):
 
 
 def add_order(customer_id, weight, db_name=None):
+    if (
+        not isinstance(weight, (int, float))
+        or isinstance(weight, bool)
+    ):
+        raise ValueError("Weight must be a number.")
+
+    if not math.isfinite(weight):
+        raise ValueError("Weight must be a finite number.")
+
+    if weight <= 0:
+        raise ValueError("Weight must be greater than zero.")
+
     with get_connection(db_name) as connection:
         cursor = connection.execute(
             "INSERT INTO orders (customer_id, weight) VALUES (?, ?)",
             (customer_id, weight)
         )
         return cursor.lastrowid
-
 
 def get_customers(db_name=None):
     with get_connection(db_name) as connection:

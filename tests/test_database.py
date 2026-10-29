@@ -79,7 +79,24 @@ class TestDatabase(unittest.TestCase):
 
         for weight in (0, -2):
             with self.subTest(weight=weight):
-                with self.assertRaises(sqlite3.IntegrityError):
+                with self.assertRaises(ValueError):
+                    add_order(customer_id, weight, self.db_name)
+
+    def test_order_rejects_invalid_weight_types_and_values(self):
+        customer_id = add_customer("Invalid Weight Test", self.db_name)
+
+        invalid_weights = (
+            float("nan"),
+            float("inf"),
+            float("-inf"),
+            "2",
+            None,
+            True,
+        )
+
+        for weight in invalid_weights:
+            with self.subTest(weight=weight):
+                with self.assertRaises(ValueError):
                     add_order(customer_id, weight, self.db_name)
 
     def test_customer_billing(self):
