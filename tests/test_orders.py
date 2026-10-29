@@ -13,7 +13,19 @@ class TestLaundryOrder(unittest.TestCase):
     def test_invalid_weight(self):
         with self.assertRaises(ValueError):
             LaundryOrder(-2)
-    
+
+    def test_nan_weight(self):
+        with self.assertRaises(ValueError):
+            LaundryOrder(float("nan"))
+
+    def test_positive_infinity_weight(self):
+        with self.assertRaises(ValueError):
+            LaundryOrder(float("inf"))
+
+    def test_negative_infinity_weight(self):
+        with self.assertRaises(ValueError):
+            LaundryOrder(float("-inf"))
+
     def test_empty_customer_name(self):
         with self.assertRaises(ValueError):
             Customer("   ")
