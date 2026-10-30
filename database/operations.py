@@ -2,15 +2,33 @@ import math
 from database.db import get_connection
 from models.laundry_order import LaundryOrder
 
+MIN_CUSTOMER_NAME_LENGTH = 2
+MAX_CUSTOMER_NAME_LENGTH = 50
+
+def validate_customer_name(name):
+    if not isinstance(name, str):
+        raise ValueError("Customer name must be text.")
+
+    name = name.strip()
+
+    if not name:
+        raise ValueError("Customer name cannot be empty.")
+
+    if len(name) < MIN_CUSTOMER_NAME_LENGTH:
+        raise ValueError("Customer name must be at least 2 characters.")
+
+    if len(name) > MAX_CUSTOMER_NAME_LENGTH:
+        raise ValueError("Customer name cannot exceed 50 characters.")
+
+    return name
 
 def add_customer(name, db_name=None):
-    if not isinstance(name, str) or not name.strip():
-        raise ValueError("Customer name cannot be empty.")
+    name = validate_customer_name(name)
 
     with get_connection(db_name) as connection:
         cursor = connection.execute(
             "INSERT INTO customers (name) VALUES (?)",
-            (name.strip(),)
+            (name,)
         )
         return cursor.lastrowid
 
@@ -47,7 +65,6 @@ def get_customers(db_name=None):
             "SELECT id, name FROM customers ORDER BY id"
         ).fetchall()
 
-
 def get_orders(db_name=None):
     with get_connection(db_name) as connection:
         return connection.execute("""
@@ -61,14 +78,12 @@ def get_orders(db_name=None):
             ORDER BY orders.id
         """).fetchall()
 
-
 def get_customer(customer_id, db_name=None):
     with get_connection(db_name) as connection:
         return connection.execute(
             "SELECT id, name FROM customers WHERE id = ?",
             (customer_id,)
         ).fetchone()
-
 
 def update_customer(customer_id, name, db_name=None):
     if (
@@ -78,8 +93,7 @@ def update_customer(customer_id, name, db_name=None):
     ):
         raise ValueError("Customer ID must be a positive integer.")
 
-    if not isinstance(name, str) or not name.strip():
-        raise ValueError("Customer name cannot be empty.")
+    name = validate_customer_name(name)
 
     with get_connection(db_name) as connection:
         cursor = connection.execute(
@@ -92,14 +106,12 @@ def update_customer(customer_id, name, db_name=None):
 
         return True
 
-
 def find_customer_by_name(name, db_name=None):
     with get_connection(db_name) as connection:
         return connection.execute(
             "SELECT id, name FROM customers WHERE name = ? COLLATE NOCASE",
             (name.strip(),)
         ).fetchone()
-
 
 def get_customer_orders(customer_id, db_name=None):
     with get_connection(db_name) as connection:
@@ -110,7 +122,6 @@ def get_customer_orders(customer_id, db_name=None):
             ORDER BY id
         """, (customer_id,)).fetchall()
 
-
 def get_customer_billing(customer_id, db_name=None):
     with get_connection(db_name) as connection:
         return connection.execute("""
@@ -120,7 +131,6 @@ def get_customer_billing(customer_id, db_name=None):
             FROM orders
             WHERE customer_id = ?
         """, (customer_id,)).fetchone()
-
 
 def record_payment(customer_id, amount, db_name=None):
     if (
@@ -184,7 +194,6 @@ def get_customer_payment_summary(customer_id, db_name=None):
             WHERE customer_id = ?
         """, (customer_id,)).fetchone()[0]
 
-
 def get_customer_payment_history(customer_id, db_name=None):
     with get_connection(db_name) as connection:
         return connection.execute(
@@ -196,7 +205,6 @@ def get_customer_payment_history(customer_id, db_name=None):
             """,
             (customer_id,),
         ).fetchall()
-
 
 def get_customer_balance(customer_id, db_name=None):
     order_count, total_weight = get_customer_billing(

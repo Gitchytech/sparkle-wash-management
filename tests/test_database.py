@@ -20,7 +20,6 @@ from database.operations import (
     update_customer
 )
 
-
 class TestDatabase(unittest.TestCase):
     def setUp(self):
         self.temp_dir = tempfile.TemporaryDirectory()
@@ -76,13 +75,21 @@ class TestDatabase(unittest.TestCase):
         with self.assertRaises(sqlite3.IntegrityError):
             add_order(99999, 2, self.db_name)
 
-    def test_order_rejects_invalid_customer_id_types(self):
-        invalid_ids = (None, "abc", True, 1.5)
+    def test_add_customer_rejects_invalid_names(self):
+        invalid_names = (
+            "",
+            "   ",
+            None,
+            123,
+            True,
+            "A",
+            "A" * 51,
+        )
 
-        for customer_id in invalid_ids:
-            with self.subTest(customer_id=customer_id):
+        for name in invalid_names:
+            with self.subTest(name=name):
                 with self.assertRaises(ValueError):
-                    add_order(customer_id, 2, self.db_name)
+                    add_customer(name, self.db_name)
 
     def test_order_rejects_nonpositive_weight(self):
         customer_id = add_customer("Constraint Test", self.db_name)
@@ -176,7 +183,6 @@ class TestDatabase(unittest.TestCase):
 
         self.assertEqual(total_paid, 800.0)
 
-
     def test_customer_payment_history(self):
         customer_id = add_customer("Payment History Test", self.db_name)
         add_order(customer_id, 5, self.db_name)
@@ -207,7 +213,6 @@ class TestDatabase(unittest.TestCase):
         )
 
         self.assertEqual(history, [])
-
 
     def test_customer_with_no_payments(self):
         customer_id = add_customer("Unpaid Customer", self.db_name)
@@ -303,7 +308,6 @@ class TestDatabase(unittest.TestCase):
         self.assertEqual(summary["total_weight"], 0)
         self.assertEqual(summary["total_payments"], 0)
 
-
     def test_update_customer(self):
         customer_id = add_customer("Original Name", self.db_name)
 
@@ -318,7 +322,6 @@ class TestDatabase(unittest.TestCase):
             get_customer(customer_id, self.db_name),
             (customer_id, "Updated Name"),
         )
-
 
     def test_update_customer_missing_customer(self):
         result = update_customer(
@@ -342,18 +345,44 @@ class TestDatabase(unittest.TestCase):
             (customer_id, "Test Customer"),
         )
 
-
     def test_update_customer_rejects_invalid_names(self):
         customer_id = add_customer("Test Customer", self.db_name)
 
-        for invalid_name in ["", "   ", None, 123, True]:
-            with self.subTest(name=invalid_name):
+        invalid_names = (
+            "",
+            "   ",
+            None,
+            123,
+            True,
+            "A",
+            "A" * 51,
+        )
+
+        for name in invalid_names:
+            with self.subTest(name=name):
                 with self.assertRaises(ValueError):
-                    update_customer(customer_id, invalid_name, self.db_name)
+                    update_customer(customer_id, name, self.db_name)
 
         self.assertEqual(
             get_customer(customer_id, self.db_name),
             (customer_id, "Test Customer"),
+        )
+
+    def test_customer_name_length_boundaries(self):
+        minimum_name = "Al"
+        maximum_name = "A" * 50
+
+        customer_id = add_customer(minimum_name, self.db_name)
+
+        self.assertIsInstance(customer_id, int)
+
+        self.assertTrue(
+            update_customer(customer_id, maximum_name, self.db_name)
+        )
+
+        self.assertEqual(
+            get_customer(customer_id, self.db_name)[1],
+            maximum_name,
         )
 
 if __name__ == "__main__":

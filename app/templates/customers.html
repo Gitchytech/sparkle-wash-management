@@ -22,13 +22,16 @@
             {% endif %}
 
 	    <form method="POST" action="{{ url_for('main.customers') }}">
-                <label for="name">Customer Name</label>
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+            <label for="name">Customer Name</label>
                 <input
                     type="text"
                     id="name"
                     name="name"
                     required
-                    maxlength="100"
+                    minlength="2"
+                    maxlength="50"
                     placeholder="Enter customer name">
                 <button type="submit">Add Customer</button>
             </form>

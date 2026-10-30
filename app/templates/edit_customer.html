@@ -15,13 +15,16 @@
         {% endif %}
 
         <form method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
             <label for="name">Customer name</label>
             <input
                 type="text"
                 id="name"
                 name="name"
                 value="{{ customer[1] }}"
-                maxlength="100"
+                minlength="2"
+                maxlength="50"
                 required
             >
 
